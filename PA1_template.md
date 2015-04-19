@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 Download data from "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 
@@ -11,51 +6,51 @@ Download data from "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factiv
 
 Unzip the content of the activity.zip file into your project main dir
 
-```{r load and process data, echo=TRUE}
 
+```r
 data <- read.csv("activity.csv", sep=",",  header=TRUE)
 data$date <- as.Date(data$date, "%Y-%m-%d")
-
 ```
 
 ## What is mean total number of steps taken per day?
 
-```{r, echo=TRUE, results='hide', message=FALSE}
+
+```r
 library(dplyr)
 sumSteps <- data %>% group_by(date) %>% summarise(sum(steps))
 colnames(sumSteps) <- c("Date", "Sum")
-
 ```
 
 - The Mean for total daily steps 
 
-```{r}
-mean(sumSteps$Sum, na.rm = TRUE)
 
+```r
+mean(sumSteps$Sum, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 
 - The Median for total daily steps
 
-```{r}
-median(sumSteps$Sum, na.rm = TRUE)
 
+```r
+median(sumSteps$Sum, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 ### Histogram of total number of steps taken per day
 
-```{r histogram, echo=FALSE}
-
-br <- sumSteps$Date
-hist(sumSteps$Sum, col="red", 
-     main= "Histogram of Total Steps per day", 
-     xlab="Total Daily Steps", 
-     breaks=10)
-
-```
+![](PA1_template_files/figure-html/histogram-1.png) 
 
 ## What is the average daily activity pattern?
 
-```{r}
+
+```r
 avgSteps <- data %>% group_by(interval) %>% summarise(mean(steps, na.rm=TRUE))
 colnames(avgSteps) <- c("Interval", "Avg")
 
@@ -65,10 +60,17 @@ stepsTS <- ts(avgDaily)
 plot.ts(stepsTS)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+
 And we use the following code to first get the interval on which the average
 max daily steps is
-```{r}
+
+```r
 which(avgDaily == max(avgDaily))
+```
+
+```
+## [1] 104
 ```
 and that give us 835 minutes in the day is the 5 minute interval with more
 steps in average.
@@ -78,16 +80,42 @@ steps in average.
 Check for missing values on the data set, and if there are all concentrate on 
 the steps variable.
 
-```{r}
+
+```r
 table(is.na(data))
+```
+
+```
+## 
+## FALSE  TRUE 
+## 50400  2304
 ```
 
 There are 2304 NA, but in which variable are all of them?
 
-```{r}
+
+```r
 any(is.na(data$steps))
+```
+
+```
+## [1] TRUE
+```
+
+```r
 any(is.na(data$date))
+```
+
+```
+## [1] FALSE
+```
+
+```r
 any(is.na(data$interval))
+```
+
+```
+## [1] FALSE
 ```
 
 According to this there are all in the steps variable
@@ -95,7 +123,8 @@ According to this there are all in the steps variable
 Now fill the NA with the mean of the interval for the full given period. We do
 that using the package dplyr
 
-```{r}
+
+```r
 newData <- data
 newData <- newData %>% 
         group_by(interval) %>%
@@ -104,33 +133,35 @@ newData <- newData %>%
 
 Summarize the new data set using dplyr in order to get the total steps per day,
 maek an histogram and take mean and median
-```{r}
+
+```r
 newSumSteps <- newData %>% group_by(date) %>%  summarise(sum = sum(steps))
 ```
 
 Histogram 
 
-```{r echo=FALSE}
-
-hist(newSumSteps$sum,
-     col="blue", 
-     main= "Histogram of Total Steps per day", 
-     xlab="Total Daily Steps", 
-     breaks=10)
-```
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
 
 It has the same distribution, but with more steps per day
 
 - Mean
-```{r}
-mean(sumSteps$Sum, na.rm = TRUE)
 
+```r
+mean(sumSteps$Sum, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 
 - Median
-```{r}
-median(sumSteps$Sum, na.rm = TRUE)
 
+```r
+median(sumSteps$Sum, na.rm = TRUE)
+```
+
+```
+## [1] 10765
 ```
 
 Mean and median are exact the same as the previous data set.
@@ -139,24 +170,39 @@ Mean and median are exact the same as the previous data set.
 
 
 Change the system time on my computer so the days will apear in English,
-```{r}
+
+```r
 Sys.setlocale("LC_TIME", "English")
 ```
 
+```
+## [1] "English_United States.1252"
+```
+
 Check for the day of the week usinf timeDate package
-```{r, message=FALSE}
+
+```r
 library(timeDate)
+```
+
+```
+## Warning: package 'timeDate' was built under R version 3.1.3
+```
+
+```r
 newData <- newData %>% group_by(date) %>% mutate(weekend= isWeekend(as.timeDate(date)))
 ```
    
 check for weekend and weekdays
-```{r}
+
+```r
 newData <- mutate(newData, day = ifelse(weekend, "Weekend", "Weekday"))
 ```
 
 
 create the dataset to plot
-```{r}
+
+```r
 wplot <- newData %>%
         group_by(interval, day) %>%
         summarise(avgEnd = mean(steps, na.rm=TRUE))
@@ -164,11 +210,14 @@ wplot <- newData %>%
 
 
 plot with lattice package
-```{r, message=FALSE}
+
+```r
 library(lattice)
 
 xyplot(avgEnd ~ interval | day, data = wplot, type = "l", layout = c(1,2))
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-17-1.png) 
 
 You can tell from the panel plot that the individual on average does more steps
 on the weekends than on weekdays
